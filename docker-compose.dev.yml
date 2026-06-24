@@ -1,0 +1,48 @@
+# Wersja development — pełny obraz API z AutoGluon (wolniejszy build)
+# Uruchomienie: docker compose -f docker-compose.dev.yml up --build
+# Streamlit: http://localhost:8501
+# FastAPI:   http://localhost:8000
+# Swagger:   http://localhost:8000/docs
+
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.full     # pełny obraz (requirements.txt, z AutoGluon)
+    container_name: suml-api-dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - suml_data_dev:/app/data
+    env_file:
+      - .env
+    environment:
+      - WANDB_MODE=offline
+      - RUN_AUTOML=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: Dockerfile.streamlit
+    container_name: suml-streamlit-dev
+    ports:
+      - "8501:8501"
+    volumes:
+      - suml_data_dev:/app/data
+    env_file:
+      - .env
+    environment:
+      - API_URL=http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  suml_data_dev:

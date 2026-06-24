@@ -1,0 +1,24 @@
+FROM python:3.10-slim
+
+RUN apt-get update && apt-get install -y \
+    python3-dev \
+    build-essential \
+    apt-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+RUN pip install --upgrade pip setuptools wheel
+
+# Streamlit requirements: includes SDV (synthetic data tab) but no AutoGluon
+COPY requirements-streamlit.txt .
+RUN pip install --no-cache-dir -r requirements-streamlit.txt
+
+COPY . .
+
+RUN mkdir -p data/01_raw
+
+EXPOSE 8501
+
+CMD ["python", "-m", "streamlit", "run", "app/streamlit_app.py", \
+     "--server.port=8501", "--server.address=0.0.0.0"]

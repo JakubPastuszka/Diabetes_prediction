@@ -1,0 +1,31 @@
+# Target and splits — aligned with Sprint 1 notebook (Pima / diabetes table).
+target_column: "Outcome"
+
+split:
+  test_size: 0.30
+  val_ratio: 0.50
+  random_state: 42
+
+# Passed as **kwargs to sklearn RandomForestClassifier (no hardcoding in nodes).
+model:
+  n_estimators: 100
+  max_depth: 10
+  random_state: 42
+
+# Preprocessing rules live in YAML (not in Python constants).
+preprocess:
+  drop_duplicates: true
+  drop_na_rows: false
+  zero_as_missing_columns:
+    - Glucose
+    - BloodPressure
+    - SkinThickness
+    - Insulin
+    - BMI
+
+# AutoML configuration for Sprint 4.
+automl:
+  presets: "medium_quality"
+  time_limit: 120
+  eval_metric: "f1"
+  model_path: "data/06_models/autogluon"

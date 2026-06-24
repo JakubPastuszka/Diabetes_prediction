@@ -1,0 +1,12 @@
+pandas
+numpy
+sqlalchemy>=2.0
+matplotlib
+seaborn
+plotly
+scikit-learn>=1.4,<1.7
+scipy
+python-dotenv
+json5
+streamlit==1.58.0
+requests==2.34.2

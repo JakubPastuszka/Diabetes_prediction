@@ -1,0 +1,44 @@
+"""Kedro pipeline: load (catalog) → preprocess → split → train → evaluate."""
+
+from kedro.pipeline import Pipeline, node, pipeline
+
+from .nodes import evaluate_and_log, preprocess, split_data, train_model
+
+
+def create_pipeline(**kwargs) -> Pipeline: # pylint: disable=unused-argument
+    """Register the four nodes required for Sprint 2."""
+    return pipeline(
+        [
+            node(
+                func=preprocess,
+                inputs=["raw_data", "parameters"],
+                outputs="processed_data",
+                name="preprocess_node",
+            ),
+            node(
+                func=split_data,
+                inputs=["processed_data", "parameters"],
+                outputs=[
+                    "X_train",
+                    "X_val",
+                    "X_test",
+                    "y_train",
+                    "y_val",
+                    "y_test",
+                ],
+                name="split_data_node",
+            ),
+            node(
+                func=train_model,
+                inputs=["X_train", "y_train", "parameters"],
+                outputs="trained_model",
+                name="train_model_node",
+            ),
+            node(
+                func=evaluate_and_log,
+                inputs=["trained_model", "X_val", "y_val", "parameters"],
+                outputs="metrics",
+                name="evaluate_and_log_node",
+            ),
+        ]
+    )

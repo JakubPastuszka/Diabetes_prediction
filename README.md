@@ -1,571 +1,147 @@
-# SUML-PRO — MLOps Project
+# ASI_PRO — MLOps Project (Sprint 1-6)
 
-Projekt zespołowy realizowany w ramach przedmiotu SUML / MLOps.
-Celem projektu jest przygotowanie aplikacji wykorzystującej model Machine Learning
-do predykcji ryzyka cukrzycy na podstawie danych Pima Indians Diabetes Dataset.
-
-Projekt składa się z kilku części:
-
-- pipeline'u Kedro do przetwarzania danych, trenowania modelu i ewaluacji,
-- lokalnej bazy danych SQLite,
-- REST API przygotowanego w FastAPI,
-- aplikacji webowej Streamlit,
-- śledzenia eksperymentów w Weights & Biases,
-- modułu generowania danych syntetycznych z użyciem SDV.
-
-## Forma aplikacji
-
-Projekt można traktować jako aplikację webową z backendem API:
-
-- `Streamlit` — frontend / dashboard użytkownika,
-- `FastAPI` — backend udostępniający endpointy do predykcji,
-- `SQLite` — lokalne źródło danych,
-- `Kedro` — pipeline danych, trenowania i ewaluacji modelu.
-
-Użytkownik korzysta z aplikacji przez przeglądarkę pod adresem:
-
-```
-http://localhost:8501
-```
-
-API działa pod adresem:
-
-```
-http://127.0.0.1:8000
-```
-
-Dokumentacja API (Swagger UI) jest dostępna pod:
-
-```
-http://127.0.0.1:8000/docs
-```
+Projekt zespołowy realizowany w ramach przedmiotu ASI (MLOps).  
+Aktualny zakres: pipeline Kedro + śledzenie eksperymentów w Weights & Biases,
+REST API (FastAPI), dashboard Streamlit oraz pipeline generowania danych
+syntetycznych (SDV).
 
 ## Tech Stack
 
-| Warstwa                 | Narzędzie              | Rola                                       |
-|-------------------------|------------------------|--------------------------------------------|
-| Dane                    | SQLite                 | Lokalna baza danych                        |
-| Pipeline                | Kedro 0.19.9           | Orkiestracja, preprocessing, trening       |
-| Modelowanie baseline    | scikit-learn           | RandomForestClassifier                     |
-| Modelowanie AutoML      | AutoGluon 1.5.0        | Automatyczny dobór najlepszego modelu      |
-| Śledzenie eksperymentów | Weights & Biases       | Metryki, porównanie modeli                 |
-| API                     | FastAPI + Pydantic     | Serwowanie predykcji, walidacja danych     |
-| Dashboard               | Streamlit 1.58.0       | Interfejs użytkownika                      |
-| Dane syntetyczne        | SDV 1.37.1             | Generowanie i ewaluacja danych             |
-| Środowisko              | Python venv            | Izolacja zależności                        |
+- `Python`, `scikit-learn`, `pandas`
+- `SQLite` jako źródło danych
+- `Kedro 0.19.9` do orkiestracji pipeline
+- `Weights & Biases (wandb)` do eksperymentów
+- `FastAPI` + `uvicorn` — REST API serwujące predykcje (Sprint 5)
+- `Streamlit` — dashboard użytkownika (Sprint 6)
+- `SDV` — generowanie i ewaluacja danych syntetycznych (Sprint 6)
 
 ## Struktura projektu
 
-```
-SUML-PRO/
-├── api/                              # aplikacja FastAPI
-│   ├── __init__.py
-│   ├── main.py                       # endpointy: /health, /model-info, /predict
-│   ├── model_loader.py               # ładowanie modeli z dysku
-│   └── schemas.py                    # walidacja Pydantic
-├── app/
-│   └── streamlit_app.py              # dashboard Streamlit (3 zakładki)
-├── conf/
-│   ├── base/
-│   │   ├── catalog.yml               # definicje datasetów Kedro
-│   │   ├── parameters.yml            # parametry modelu i preprocessingu
-│   │   └── parameters_synthetic.yml  # parametry pipeline SDV
-│   └── local/
-│       └── credentials.yml           # lokalna konfiguracja bazy (nie commitować)
-├── data/
-│   ├── 01_raw/                       # baza SQLite: dataset.db
-│   ├── 03_primary/                   # dane syntetyczne: synthetic_data.csv
-│   ├── 05_model_input/               # dane po preprocessingu (pkl)
-│   ├── 06_models/                    # zapisane modele: baseline_model.pkl, autogluon/
-│   └── 08_reporting/                 # metryki: metrics.json, automl_metrics.json, synthetic_scores.json
-├── notebooks/                        # EDA i wcześniejsze eksperymenty
-├── scripts/
-│   └── bootstrap_dataset_db.py       # pobranie danych i utworzenie SQLite
-├── src/suml_projekt/
-│   └── pipelines/
-│       ├── data_processing/          # preprocessing, split, trening, ewaluacja
-│       ├── automl/                   # trening AutoGluon
-│       └── synthetic/                # generowanie danych syntetycznych SDV
-├── tests/                            # testy jednostkowe
-├── requirements.txt
-├── pyproject.toml
-└── README.md
-```
+- `asi-projekt/conf/base/catalog.yml` — definicje datasetów
+- `asi-projekt/conf/base/parameters.yml` — parametry modelu i preprocessingu
+- `asi-projekt/conf/base/parameters_synthetic.yml` — parametry pipeline'u SDV
+- `asi-projekt/conf/local/credentials.yml` — lokalne credentials (gitignored)
+- `asi-projekt/src/asi_projekt/pipelines/data_processing/` — preprocessing, split, trening, ewaluacja
+- `asi-projekt/src/asi_projekt/pipelines/automl/` — AutoGluon (Sprint 4)
+- `asi-projekt/src/asi_projekt/pipelines/synthetic/` — generowanie + ewaluacja danych syntetycznych (Sprint 6)
+- `asi-projekt/api/` — aplikacja FastAPI (Sprint 5)
+- `asi-projekt/app/streamlit_app.py` — dashboard Streamlit (Sprint 6)
+- `asi-projekt/notebooks/01_eda.ipynb` — EDA i baseline z etapu notebookowego
 
-## Wymagania
+## Co działa
+WSZYSTKO B)
+- ładowanie danych z `SQLite` przez `Data Catalog` (`pandas.SQLTableDataset`)
+- preprocessing -> split train/val/test -> trening modelu -> ewaluacja
+- zapis artefaktów pipeline:
+  - `data/05_model_input/*.pkl`
+  - `data/06_models/baseline_model.pkl`
+  - `data/08_reporting/metrics.json`
+- integracja W&B:
+  - nowy run przy każdym `kedro run`
+  - logowanie `config`, metryk (`accuracy`, `precision`, `recall`, `f1`) i artefaktu modelu
+- REST API (FastAPI): `/health`, `/model-info`, `/predict` (model ładowany raz przy starcie)
+- dashboard Streamlit z 3 zakładkami: Predykcja (request do API), Dane (podgląd z bazy),
+  Dane syntetyczne (generowanie SDV + porównanie z oryginałem)
+- pipeline SDV: generowanie danych + ewaluacja (`run_diagnostic`, `evaluate_quality`),
+  oba score'y logowane do W&B
+  - `data/03_primary/synthetic_data.csv`
+  - `data/08_reporting/synthetic_scores.json`
 
-Zalecana wersja Pythona:
+## Szybki start
 
-```
-Python 3.10, 3.11 lub 3.12
-```
+1. Przejdź do katalogu projektu:
 
-Przed uruchomieniem projektu należy mieć zainstalowane:
+   ```bash
+   cd asi-projekt
+   ```
 
-```
-Python
-pip
-Git
-```
+2. Zainstaluj zależności:
 
-Opcjonalnie (do uruchomienia przez Docker):
+   ```bash
+   pip install -r requirements.txt
+   pip install -e .
+   ```
 
-```
-Docker
-Docker Compose
-```
+3. Utwórz lokalne credentials bazy:
 
----
+   ```yaml
+   # conf/local/credentials.yml
+   db_credentials:
+     con: "sqlite:///data/01_raw/dataset.db"
+   ```
 
-## Szybki start — uruchomienie lokalne
+4. Uzupełnij `.env` (lokalnie, nie commitować):
 
-Wszystkie komendy należy wykonywać z katalogu głównego projektu (`SUML-PRO`).
+   ```env
+   WANDB_API_KEY=your_key_here
+   WANDB_ENTITY=your_team_name
+   WANDB_PROJECT=ASI-Project
+   DATABASE_PATH=data/01_raw/dataset.db
+   DB_TABLE_NAME=diabetes
+   ```
 
-### 1. Sklonuj repozytorium
+5. Uruchom pipeline:
 
-```bash
-git clone <adres_repozytorium>
-cd SUML-PRO
-```
+   ```bash
+   python -W "default:Kedro is not yet fully compatible" -m kedro run
+   ```
 
-### 2. Utwórz i aktywuj środowisko wirtualne
-
-Linux / macOS:
+6. Uruchom pipeline treningowy:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+   python -m kedro run
 ```
 
-Windows PowerShell:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-### 3. Zainstaluj zależności
+7. (Opcjonalnie) uruchom wizualizację DAG:
 
 ```bash
-python -m pip install --upgrade pip setuptools wheel
-python -m pip install -r requirements.txt
-python -m pip install -e .
-```
+   python -m kedro viz run
 
-> Instalacja AutoGluon może zająć kilka minut.
+## Dashboard Streamlit (Sprint 6)
 
-### 4. Utwórz lokalny plik `.env`
-
-```bash
-cp .env.example .env
-```
-
-Przykładowa zawartość `.env`:
-
-```env
-WANDB_API_KEY=your_key_here
-WANDB_ENTITY=your_team_name
-WANDB_PROJECT=suml-projekt
-DATABASE_PATH=data/01_raw/dataset.db
-DB_TABLE_NAME=diabetes
-WANDB_MODE=offline
-```
-
-> Ustaw `WANDB_MODE=offline` jeżeli nie korzystasz z W&B online. Pliku `.env` nie commitować.
-
-### 5. Utwórz lokalne credentials dla Kedro
-
-Utwórz plik `conf/local/credentials.yml`:
-
-```yaml
-db_credentials:
-  con: "sqlite:///data/01_raw/dataset.db"
-```
-
-> Plik `conf/local/credentials.yml` nie powinien być commitowany do repozytorium.
-
-### 6. Utwórz bazę danych SQLite
-
-```bash
-python scripts/bootstrap_dataset_db.py
-```
-
-Skrypt pobiera publiczny plik CSV z danymi Pima Indians Diabetes Dataset i zapisuje go
-jako bazę SQLite w `data/01_raw/dataset.db` z tabelą `diabetes`.
-
-Oczekiwany output:
-
-```
-INFO SQLite ready: .../data/01_raw/dataset.db rows=768 table=diabetes
-```
-
-### 7. Uruchom pipeline Kedro — model baseline
-
-```bash
-python -m kedro run
-```
-
-Pipeline wykonuje preprocessing, split danych (train 70% / val 15% / test 15%),
-trening RandomForestClassifier oraz ewaluację z logowaniem do W&B.
-
-Po poprawnym wykonaniu powstają:
-
-```
-data/05_model_input/X_train.pkl, X_val.pkl, X_test.pkl, ...
-data/06_models/baseline_model.pkl
-data/08_reporting/metrics.json
-```
-
-### 8. Uruchom pipeline AutoGluon (opcjonalnie, zalecane)
-
-```bash
-python -m kedro run --pipeline automl
-```
-
-AutoGluon automatycznie dobiera najlepszy model spośród wielu algorytmów.
-Trening trwa około 2 minut (time_limit=120s, presets=medium_quality).
-
-Po poprawnym wykonaniu powstają:
-
-```
-data/06_models/autogluon/
-data/08_reporting/automl_metrics.json
-```
-
-> Jeżeli AutoGluon jest wytrenowany, API automatycznie używa go zamiast modelu baseline.
-
-### 9. Uruchom API FastAPI
-
-W **pierwszym terminalu** uruchom:
-
-```bash
-python -m uvicorn api.main:app --reload
-```
-
-API powinno działać pod adresem `http://127.0.0.1:8000`.
-
-Sprawdzenie działania:
-
-```bash
-curl http://127.0.0.1:8000/health
-```
-
-Oczekiwana odpowiedź:
-
-```json
-{
-  "status": "ok",
-  "baseline_model_loaded": true,
-  "automl_model_loaded": true
-}
-```
-
-### 10. Uruchom aplikację Streamlit
-
-W **drugim terminalu**, z katalogu głównego projektu:
+W osobnym terminalu, przy działającym API:
 
 ```bash
 python -m streamlit run app/streamlit_app.py
 ```
 
-Aplikacja będzie dostępna pod adresem `http://localhost:8501`.
+Dashboard: `http://localhost:8501`. Adres API konfigurowalny przez zmienną
+środowiskową `API_URL` (domyślnie `http://127.0.0.1:8000`).
 
-> Ważne: uruchamiaj zawsze z katalogu `SUML-PRO`, nie z folderu `app/`.
+## Pipeline danych syntetycznych — SDV (Sprint 6)
 
----
-
-## Endpointy API
-
-### GET /health — health check
-
-Sprawdza czy API działa i które modele są załadowane.
-
-```bash
-curl http://127.0.0.1:8000/health
-```
-
-Przykładowa odpowiedź:
-
-```json
-{
-  "status": "ok",
-  "baseline_model_loaded": true,
-  "automl_model_loaded": true
-}
-```
-
-### GET /model-info — informacje o modelu
-
-Zwraca typ modelu i metryki walidacyjne.
-
-```bash
-curl http://127.0.0.1:8000/model-info
-```
-
-Przykładowa odpowiedź:
-
-```json
-{
-  "baseline": {
-    "type": "RandomForestClassifier",
-    "metrics": {
-      "accuracy": 0.739,
-      "f1": 0.605,
-      "precision": 0.590,
-      "recall": 0.622
-    }
-  },
-  "automl": {
-    "type": "AutoGluon TabularPredictor",
-    "metrics": {
-      "f1": 0.567
-    }
-  }
-}
-```
-
-### POST /predict — predykcja
-
-Przyjmuje dane pacjenta i zwraca predykcję ryzyka cukrzycy.
-
-```bash
-curl -X POST "http://127.0.0.1:8000/predict" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "Pregnancies": 2,
-    "Glucose": 120,
-    "BloodPressure": 70,
-    "SkinThickness": 25,
-    "Insulin": 80,
-    "BMI": 28.5,
-    "DiabetesPedigreeFunction": 0.35,
-    "Age": 33
-  }'
-```
-
-Przykładowa odpowiedź:
-
-```json
-{
-  "prediction": 0,
-  "probability": 0.36,
-  "model": "RandomForestGini"
-}
-```
-
-Znaczenie klasy:
-
-```
-0 — brak cukrzycy
-1 — ryzyko cukrzycy
-```
-
-Walidacja danych wejściowych (zwracane kody błędów):
-
-| Kod | Znaczenie                                      |
-|-----|------------------------------------------------|
-| 200 | Predykcja zakończona sukcesem                  |
-| 422 | Błędne dane wejściowe (walidacja Pydantic)     |
-| 503 | Model nie jest załadowany                      |
-| 500 | Błąd wewnętrzny podczas predykcji              |
-
-Zakresy akceptowanych wartości:
-
-| Pole                     | Typ   | Zakres         |
-|--------------------------|-------|----------------|
-| Pregnancies              | int   | 0 – 20         |
-| Glucose                  | float | > 0, ≤ 300     |
-| BloodPressure            | float | 0 – 200        |
-| SkinThickness            | float | 0 – 100        |
-| Insulin                  | float | 0 – 1000       |
-| BMI                      | float | > 0, ≤ 80      |
-| DiabetesPedigreeFunction | float | 0.0 – 3.0      |
-| Age                      | int   | 1 – 120        |
-
----
-
-## Dashboard Streamlit
-
-Aplikacja Streamlit zawiera trzy zakładki:
-
-1. **Predykcja** — formularz do wprowadzenia danych pacjenta i uzyskania predykcji modelu przez API.
-2. **Dane** — podgląd 100 pierwszych rekordów z lokalnej bazy SQLite oraz statystyki opisowe.
-3. **Dane syntetyczne** — generowanie danych syntetycznych z użyciem SDV i porównanie ze statystykami oryginału.
-
-Streamlit komunikuje się z API przez zmienną środowiskową `API_URL`:
-
-```env
-API_URL=http://127.0.0.1:8000
-```
-
-Domyślnie używa `http://127.0.0.1:8000`.
-
----
-
-## Pipeline danych syntetycznych — SDV
+Generuje dane syntetyczne i ewaluuje ich jakość, logując wyniki do W&B:
 
 ```bash
 python -m kedro run --pipeline=synthetic
 ```
+Wynik: `diagnostic_score` (~1.0, poprawność struktury) i `quality_score`
+(podobieństwo statystyczne, celowo < 1.0) — zapisane do
+`data/08_reporting/synthetic_scores.json` i zalogowane do W&B.
 
-Pipeline generuje dane syntetyczne i ewaluuje ich jakość, logując wyniki do W&B.
 
-Wyniki zapisywane są do:
+## Weights and Biases (Sprint 3)
 
-```
-data/03_primary/synthetic_data.csv
-data/08_reporting/synthetic_scores.json
-```
+- Logowanie do W&B:
 
-Obliczane metryki:
+  ```bash
+  wandb login
+  ```
 
-- `diagnostic_score` — poprawność struktury danych syntetycznych (oczekiwane ~1.0),
-- `quality_score` — podobieństwo statystyczne do danych rzeczywistych.
+- Przykładowe eksperymenty:
 
----
+  ```bash
+  python -W "default:Kedro is not yet fully compatible" -m kedro run --params="model.n_estimators=100,model.max_depth=10"
+  python -W "default:Kedro is not yet fully compatible" -m kedro run --params="model.n_estimators=300,model.max_depth=10"
+  python -W "default:Kedro is not yet fully compatible" -m kedro run --params="model.n_estimators=100,model.max_depth=20"
+  python -W "default:Kedro is not yet fully compatible" -m kedro run --params="model.n_estimators=500,model.max_depth=20"
+  python -W "default:Kedro is not yet fully compatible" -m kedro run --params="model.n_estimators=200,model.max_depth=null"
+  ```
 
-## Weights & Biases
-
-Logowanie do W&B:
-
-```bash
-wandb login
-```
-
-Przykładowe eksperymenty z różnymi parametrami:
-
-```bash
-python -m kedro run --params="model.n_estimators=100,model.max_depth=10"
-python -m kedro run --params="model.n_estimators=300,model.max_depth=10"
-python -m kedro run --params="model.n_estimators=100,model.max_depth=20"
-python -m kedro run --params="model.n_estimators=500,model.max_depth=20"
-python -m kedro run --params="model.n_estimators=200,model.max_depth=null"
-```
-
-Tryb offline (bez połączenia z internetem):
-
-```env
-WANDB_MODE=offline
-```
-
----
-
-## Testy
-
-Uruchomienie testów jednostkowych:
-
-```bash
-python -m pytest
-```
-
----
-
-## Uruchomienie przez Docker
-
-Jeżeli projekt zawiera pliki `Dockerfile` oraz `docker-compose.yml`:
-
-```bash
-docker compose up --build
-```
-
-Po uruchomieniu:
-
-```
-Streamlit: http://localhost:8501
-FastAPI:   http://localhost:8000
-API docs:  http://localhost:8000/docs
-```
-
-> W Docker Compose Streamlit nie powinien odwoływać się do API przez `127.0.0.1`,
-> tylko przez nazwę usługi. Ustaw w `.env`:
->
-> ```env
-> API_URL=http://api:8000
-> ```
-
----
-
-## Najczęstsze problemy
-
-### Brak pliku `dataset.db`
-
-Objaw:
-
-```
-sqlite3.OperationalError: unable to open database file
-```
-
-Rozwiązanie:
-
-```bash
-python scripts/bootstrap_dataset_db.py
-```
-
-### Streamlit nie może połączyć się z API
-
-Objaw:
-
-```
-Nie można połączyć się z API pod http://127.0.0.1:8000
-```
-
-Rozwiązanie: uruchom FastAPI w osobnym terminalu:
-
-```bash
-python -m uvicorn api.main:app --reload
-```
-
-### API działa, ale model nie jest załadowany (503)
-
-Rozwiązanie: uruchom pipeline treningowy i zrestartuj API:
-
-```bash
-python -m kedro run
-python -m uvicorn api.main:app --reload
-```
-
-### Streamlit uruchomiony z folderu `app/`
-
-Niepoprawnie:
-
-```bash
-cd app
-python -m streamlit run streamlit_app.py
-```
-
-Poprawnie (z katalogu głównego projektu):
-
-```bash
-python -m streamlit run app/streamlit_app.py
-```
-
-### AutoGluon nie jest dostępny po `kedro run`
-
-`kedro run` uruchamia tylko pipeline baseline. Aby wytrenować AutoGluon:
-
-```bash
-python -m kedro run --pipeline automl
-```
-
----
+- Dashboard projektu:
+  - `https://wandb.ai/13c_2/ASI-Project`
 
 ## Bezpieczeństwo
 
-Nie należy commitować do repozytorium:
-
-```
-.env
-conf/local/credentials.yml
-```
-
-Klucze API, dane logowania i lokalne ścieżki powinny być przechowywane wyłącznie lokalnie.
-
----
-
-## Autorzy
-
-Projekt zespołowy przygotowany w ramach przedmiotu SUML / MLOps.
-
-- Imię i nazwisko 1 — zakres prac
-- Imię i nazwisko 2 — zakres prac
-- Imię i nazwisko 3 — zakres prac
+- Nigdy nie commituj `.env` ani `conf/local/credentials.yml`.
+- Klucze API i hasła trzymamy tylko lokalnie.

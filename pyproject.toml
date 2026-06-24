@@ -1,0 +1,48 @@
+[build-system]
+requires = [ "setuptools",]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "suml_projekt"
+readme = "README.md"
+dynamic = [ "dependencies", "version",]
+
+[project.scripts]
+suml-projekt = "suml_projekt.__main__:main"
+
+[project.optional-dependencies]
+dev = [ "pytest-cov~=3.0", "pytest-mock>=1.7.1, <2.0", "pytest~=7.2", "ruff~=0.8.0",]
+
+[tool.kedro]
+package_name = "suml_projekt"
+project_name = "suml_projekt"
+kedro_init_version = "0.19.9"
+tools = [ "Linting", "Custom Logging", "Data Structure",]
+example_pipeline = "False"
+source_dir = "src"
+
+[tool.ruff]
+line-length = 88
+show-fixes = true
+
+[tool.ruff.lint]
+select = [ "F", "W", "E", "I", "UP", "PL", "T201",]
+ignore = [ "E501",]
+
+[project.entry-points."kedro.hooks"]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.setuptools.dynamic.dependencies]
+file = "requirements.txt"
+
+[tool.setuptools.dynamic.version]
+attr = "suml_projekt.__version__"
+
+[tool.setuptools.packages.find]
+where = [ "src",]
+namespaces = false
+
+[tool.pylint.BASIC]
+good-names = ["X", "X_train", "X_val", "X_test", "X_temp", "y", "df"]

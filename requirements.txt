@@ -1,0 +1,38 @@
+# Przetwarzanie danych i baza danych
+pandas
+numpy
+sqlalchemy>=2.0
+
+# Wizualizacja danych (wymagane min. 5 wykresów w EDA)
+matplotlib
+seaborn
+plotly
+
+# Machine Learning i ewaluacja
+scikit-learn>=1.4,<1.7
+scipy
+autogluon.tabular[all]==1.5.0
+
+# Zarządzanie środowiskiem i notebooki
+python-dotenv
+wandb>=0.25.1
+jupyter
+ipykernel
+
+# Operacje na plikach (do zapisu metryk JSON)
+json5
+
+# --- KEDRO (Sprint 2) ---
+kedro==0.19.9
+kedro-datasets
+kedro-viz
+
+# REST API sprint 5
+fastapi
+uvicorn[standard]
+pydantic
+
+# Streamlit sprint 6
+streamlit==1.58.0
+sdv==1.37.1
+requests==2.34.2

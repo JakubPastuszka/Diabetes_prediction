@@ -1,0 +1,64 @@
+# Here you can define all your datasets by using simple YAML syntax.
+#
+# Documentation for this file format can be found in "The Data Catalog"
+# Link: https://docs.kedro.org/en/stable/data/data_catalog.html
+
+# === Dane surowe (Kedro samo laduje z SQLite!) ===
+raw_data:
+  type: pandas.SQLTableDataset
+  credentials: db_credentials
+  table_name: diabetes
+  save_args:
+    if_exists: replace
+
+# === Dane po podziale ===
+X_train:
+  type: pickle.PickleDataset
+  filepath: data/05_model_input/X_train.pkl
+
+X_val:
+  type: pickle.PickleDataset
+  filepath: data/05_model_input/X_val.pkl
+
+X_test:
+  type: pickle.PickleDataset
+  filepath: data/05_model_input/X_test.pkl
+
+y_train:
+  type: pickle.PickleDataset
+  filepath: data/05_model_input/y_train.pkl
+
+y_val:
+  type: pickle.PickleDataset
+  filepath: data/05_model_input/y_val.pkl
+
+y_test:
+  type: pickle.PickleDataset
+  filepath: data/05_model_input/y_test.pkl
+
+# === Model ===
+trained_model:
+  type: pickle.PickleDataset
+  filepath: data/06_models/baseline_model.pkl
+
+# === Metryki ===
+metrics:
+  type: json.JSONDataset
+  filepath: data/08_reporting/metrics.json
+
+# === AutoGluon ===
+automl_predictor:
+  type: MemoryDataset
+
+automl_metrics:
+  type: json.JSONDataset
+  filepath: data/08_reporting/automl_metrics.json
+
+# === SDV (sprint 6) ===
+synthetic_data:
+  type: pandas.CSVDataset
+  filepath: data/03_primary/synthetic_data.csv
+
+synthetic_scores:
+  type: json.JSONDataset
+  filepath: data/08_reporting/synthetic_scores.json
